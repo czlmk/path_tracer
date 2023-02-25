@@ -563,7 +563,149 @@ class Scene(object):
         plt.savefig(f"render-{total_spp}spp.png")
         plt.show(block=True)
 
+if __name__ == "__main__":
+    enabled_tests = [True, False, True]
+    enable_sampling = [True, False]  # NOTE: Implicit BRDF Sampling and Explicit Light BRDF Sampling
 
+    #########################################################################
+    ### Test Case 1: Default Cornell Box Scene
+    #########################################################################
+    if enabled_tests[0]:
+
+        scene = Scene(w=int(256 / 2), h=int(256 / 2))
+        scene.set_camera_parameters(
+            eye=np.array([278, 273, -770], dtype=np.float64),
+            at=(np.array([278, 273, -769], dtype=np.float64)),
+            up=np.array([0, 1, 0], dtype=np.float64),
+            fov=int(39)
+        )
+
+        scene.add_geometries([
+            Sphere(60, np.array([213 + 65, 450, 227 + 105 / 2 - 100]),
+                   Le=1.25 * np.array([15.6, 15.6, 15.6])),
+            Mesh("cbox_floor.obj",
+                 brdf_params=np.array([0.76, 0.76, 0.76, 1])),
+            Mesh("cbox_ceiling.obj",
+                 brdf_params=np.array([0.76, 0.76, 0.76, 1])),
+            Mesh("cbox_back.obj",
+                 brdf_params=np.array([0.76, 0.76, 0.76, 1])),
+            Mesh("cbox_greenwall.obj",
+                 brdf_params=np.array([0.16, 0.76, 0.16, 1])),
+            Mesh("cbox_redwall.obj",
+                 brdf_params=np.array([0.76, 0.16, 0.16, 1])),
+            Mesh("cbox_smallbox.obj",
+                 brdf_params=np.array([0.76, 0.76, 0.76, 1])),
+            Mesh("cbox_largebox.obj",
+                 brdf_params=np.array([0.76, 0.76, 0.76, 1]))
+        ])
+
+        #########################################################################
+        ### Implicit BRDF Sampling
+        #########################################################################
+        if enable_sampling[0]:
+            scene.progressive_render_display(total_spp=512, jitter=True, num_bounces=2,sampling_type=IMPLICIT_BRDF_SAMPLING)
+            scene.progressive_render_display(total_spp=1024, jitter=True, num_bounces=4,
+                                             sampling_type=IMPLICIT_BRDF_SAMPLING)
+            scene.progressive_render_display(total_spp=2048, jitter=True, num_bounces=4,
+                                             sampling_type=IMPLICIT_BRDF_SAMPLING)
+
+
+
+    #########################################################################
+    ### Test Case 2: Scene with decreasing light size (constant power)
+    #########################################################################
+    if enabled_tests[1]:
+
+        scene = Scene(w=int(512 / 2), h=int(512 / 2))
+        scene.set_camera_parameters(
+            eye=np.array([278, 273, -770], dtype=np.float64),
+            at=(np.array([278, 273, -769], dtype=np.float64)),
+            up=np.array([0, 1, 0], dtype=np.float64),
+            fov=int(39)
+        )
+
+        scene.add_geometries([
+            Sphere(60, np.array([213 + 65, 450, 227 + 105 / 2 - 100]),
+                   Le=1.25 * np.array([15.6, 15.6, 15.6])),
+            Mesh("cbox_floor.obj",
+                 brdf_params=np.array([0.76, 0.76, 0.76, 1])),
+            Mesh("cbox_ceiling.obj",
+                 brdf_params=np.array([0.76, 0.76, 0.76, 1])),
+            Mesh("cbox_back.obj",
+                 brdf_params=np.array([0.76, 0.76, 0.76, 1])),
+            Mesh("cbox_greenwall.obj",
+                 brdf_params=np.array([0.16, 0.76, 0.16, 1])),
+            Mesh("cbox_redwall.obj",
+                 brdf_params=np.array([0.76, 0.16, 0.16, 1])),
+            Mesh("cbox_smallbox.obj",
+                 brdf_params=np.array([0.76, 0.76, 0.76, 1])),
+            Mesh("cbox_largebox.obj",
+                 brdf_params=np.array([0.76, 0.76, 0.76, 1]))
+        ])
+
+        #########################################################################
+        ### Implicit BRDF Sampling
+        #########################################################################
+        if enable_sampling[0]:
+            scene.geometries[0].r = 60
+            scene.geometries[0].Le = 1.25 * np.array([15.6, 15.6, 15.6])
+            scene.progressive_render_display(total_spp=1024, jitter=True, num_bounces=2,
+                                             sampling_type=IMPLICIT_BRDF_SAMPLING)
+
+            scene.geometries[0].r = 30
+            scene.geometries[0].Le = 4 * 1.25 * np.array([15.6, 15.6, 15.6])
+            scene.progressive_render_display(total_spp=1024, jitter=True, num_bounces=2,
+                                             sampling_type=IMPLICIT_BRDF_SAMPLING)
+
+            scene.geometries[0].r = 10
+            scene.geometries[0].Le = 9 * 4 * 1.25 * np.array([15.6, 15.6, 15.6])
+            scene.progressive_render_display(total_spp=1024, jitter=True, num_bounces=2,
+                                             sampling_type=IMPLICIT_BRDF_SAMPLING)
+
+
+
+    #########################################################################
+    ### Test Case 3: Scene with different BRDFs
+    #########################################################################
+    if enabled_tests[2]:
+        # Create test scene and test sphere
+        scene = Scene(w=int(256 / 2), h=int(256 / 2))
+        scene.set_camera_parameters(
+            eye=np.array([278, 273, -770], dtype=np.float64),
+            at=(np.array([278, 273, -769], dtype=np.float64)),
+            up=np.array([0, 1, 0], dtype=np.float64),
+            fov=int(39)
+        )
+
+        scene.add_geometries([
+            Sphere(60, np.array([213 + 65, 450, 227 + 105 / 2 - 100]),
+                   Le=1.25 * np.array([15.6, 15.6, 15.6])),
+            Mesh("cbox_floor.obj",
+                 brdf_params=np.array([0.86, 0.86, 0.86, 1])),
+            Mesh("cbox_ceiling.obj",
+                 brdf_params=np.array([0.76, 0.76, 0.76, 1])),
+            Mesh("cbox_back.obj",
+                 brdf_params=np.array([0.76, 0.76, 0.76, 50])),
+            Mesh("cbox_greenwall.obj",
+                 brdf_params=np.array([0.16, 0.76, 0.16, 1])),
+            Mesh("cbox_redwall.obj",
+                 brdf_params=np.array([0.76, 0.16, 0.16, 1])),
+            Mesh("cbox_smallbox.obj",
+                 brdf_params=np.array([0.76, 0.76, 0.76, 1])),
+            Mesh("cbox_largebox.obj",
+                 brdf_params=np.array([0.86, 0.86, 0.86, 1000]))
+        ])
+
+        #########################################################################
+        ###  Implicit BRDF Sampling
+        #########################################################################
+        if enable_sampling[0]:
+            scene.progressive_render_display(total_spp=1024, jitter=True, num_bounces=2,
+                                             sampling_type=IMPLICIT_BRDF_SAMPLING)
+            scene.progressive_render_display(total_spp=1024, jitter=True, num_bounces=3,
+                                             sampling_type=IMPLICIT_BRDF_SAMPLING)
+            scene.progressive_render_display(total_spp=1024, jitter=True, num_bounces=4,
+                                             sampling_type=IMPLICIT_BRDF_SAMPLING)
 
 
 
